@@ -11,18 +11,18 @@ public class Movement : MonoBehaviour
     #region Variables
     private Vector2 startPos;
     private Vector2 deltaPos;
-    private Vector2 finalRot = new Vector2(x:0, y:180);
+    private Vector2 finalRot = new Vector2(x: 0, y: 180);
 
     public float moveSmoother;
     public float moveSpeed;
     public float impulsePower;
     public float speed;
     private int scoreCount;
-    
+
     public bool isThrowed = false;
     public bool balance = false;
     public bool win = false;
-    
+
     private bool oneTime = true;
     private bool isMoving = false;
     private bool isClear = false;
@@ -42,6 +42,7 @@ public class Movement : MonoBehaviour
 
     public TextMeshProUGUI puan;
     public TextMeshProUGUI tapToStart;
+    public TextMeshProUGUI balanceTutorial;
     #endregion
 
 
@@ -107,7 +108,10 @@ public class Movement : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))
             {
-                Destroy(tapToStart.gameObject);
+                if (tapToStart != null)
+                {
+                    Destroy(tapToStart.gameObject);
+                }
                 isStarted = true;
                 startPos = Input.mousePosition;
             }
@@ -178,6 +182,7 @@ public class Movement : MonoBehaviour
         if (other.gameObject.tag == "Balance")
         {
             balance = true;
+            balanceTutorial.gameObject.SetActive(true);
         }
         else if (other.gameObject.tag == "Gem")
         {
@@ -210,6 +215,7 @@ public class Movement : MonoBehaviour
         if (other.gameObject.tag == "Balance")
         {
             balance = false;
+            balanceTutorial.gameObject.SetActive(false);
         }
     }
     #endregion
