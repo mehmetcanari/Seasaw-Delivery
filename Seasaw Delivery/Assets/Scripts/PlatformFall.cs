@@ -11,7 +11,7 @@ public class PlatformFall : MonoBehaviour
     }
     private void OnTriggerEnter(Collider collision)
     {
-        Debug.Log(collision.gameObject);
+        //Debug.Log(collision.gameObject);
         if (collision.gameObject.tag == "Destroy")
         {
             Destroy(transform.parent.gameObject);

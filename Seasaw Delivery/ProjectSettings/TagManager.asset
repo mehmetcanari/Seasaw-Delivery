@@ -12,6 +12,7 @@ TagManager:
   - Canvas
   - Win
   - Cam
+  - CamRotate
   layers:
   - Default
   - TransparentFX
@@ -23,7 +24,7 @@ TagManager:
   - 
   - Player
   - Box
-  - 
+  - Anvil
   - 
   - 
   - 

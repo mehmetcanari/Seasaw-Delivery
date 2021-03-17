@@ -2,32 +2,42 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
+using DG.Tweening;
+using UnityEngine.UI;
+using TMPro;
 
 public class Movement : MonoBehaviour
 {
     #region Variables
     private Vector2 startPos;
     private Vector2 deltaPos;
+    private Vector2 finalRot = new Vector2(x:0, y:180);
 
-    public Animator anim;
-    
     public float moveSmoother;
     public float moveSpeed;
     public float impulsePower;
     public float speed;
+    private int scoreCount;
     
-    private bool isClear = false;
     public bool isThrowed = false;
     public bool balance = false;
     public bool win = false;
-    bool oneTime = true;
-    bool isMoving = false;
+    
+    private bool oneTime = true;
+    private bool isMoving = false;
+    private bool isClear = false;
+    private bool isAnimated = false;
+    private bool isStarted = false;
+    private bool isEnded = false;
 
-    public CinemachineVirtualCamera mainCam;
-    public CinemachineVirtualCamera finalCam;
-    public GameObject gemImage;
+    public Animator anim;
+    public ParticleSystem gemParticle;
+    public CinemachineVirtualCamera playerCamCM;
+    public CinemachineVirtualCamera rotateCamCM;
     public List<GameObject> boxes = new List<GameObject>();
     public Rigidbody rb;
+
+    public TextMeshProUGUI puan;
     #endregion
     
 
@@ -36,102 +46,141 @@ public class Movement : MonoBehaviour
         #region Calling Functions
         rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
+        isAnimated = true;
+        isStarted = false;
+        isEnded = false;
         #endregion
     }
 
 
     void Update()
     {
+        #region Final Movement
         if (win && oneTime)
-        {          
-            transform.Rotate(new Vector3(0, 180, 0));
+        {
+            isAnimated = false;
+            if (!isAnimated)
+            {
+                isEnded = true;
+                anim.SetBool("Stop", true);
+                isStarted = false;
+            }
+            else
+            {
+                return;
+            }
+
+            transform.DORotate(finalRot, 0.5f);
             oneTime = false;
             return;
         }
+        #endregion
+
         #region Movement
-        if (isMoving && !balance && !win)
+        if (isMoving && !balance && !win && isStarted)
         {
             transform.Translate(0, 0, speed * Time.deltaTime);
+        }
+        else if (!isStarted)
+        {
+            isAnimated = false;
+            anim.SetBool("Stop", true);
+        }
+        else
+        {
+            isAnimated = true;
+            anim.SetBool("Stop", false);
         }
         #endregion
 
         #region Swerve
-        if (Input.GetMouseButtonDown(0)) 
+        if (!isEnded)
         {
-            startPos = Input.mousePosition;
-            anim.SetBool("Stop", true);
-        }
-        
-        else
-        {
-            anim.SetBool("Stop", false);
-        }
-
-        if (Input.GetMouseButton(0) && !win)
-        {
-            isMoving = false;
-            deltaPos = (Vector2)Input.mousePosition - startPos;
-            deltaPos.y = 0;
-            var movement = new Vector3(Mathf.Lerp(rb.transform.position.x, rb.transform.position.x + (deltaPos.x / Screen.width) * moveSpeed, Time.deltaTime * moveSmoother), transform.position.y, transform.position.z);
-            rb.transform.position = movement;
-            startPos = Input.mousePosition;
-            //transform.position = new Vector3(Mathf.Clamp(transform.position.x, 4.80f, -4.80f), transform.position.y, transform.position.z);
-        }
-        else
-        {
-            isMoving = true;
-        }
-        #endregion
-
-        #region Drop Mechanic
-        if (Input.GetMouseButtonUp(0) && !isThrowed && balance)
-        {
-            isThrowed = true;
-            if (!isClear)
+            if (Input.GetMouseButtonDown(0))
             {
-                Debug.Log("Bıraktın");
-                //Instantiate(, new Vector3(character.transform.position.x - 0.5f, character.transform.position.y, character.transform.position.z), Quaternion.identity
-                boxes[boxes.Count - 1].GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
-                boxes[boxes.Count - 1].GetComponent<Rigidbody>().AddForce(impulsePower, 0, 0, ForceMode.Impulse);
-                Invoke("FalseReturner", 1f);
-                boxes[boxes.Count - 1].transform.parent = null;
-                boxes.Remove(boxes[boxes.Count - 1]);
+                isStarted = true;
+                startPos = Input.mousePosition;
 
-                if (boxes.Count == 0 || boxes == null)
+            }
+
+            if (Input.GetMouseButton(0) && !win)
+            {
+                isMoving = false;
+                deltaPos = (Vector2)Input.mousePosition - startPos;
+                deltaPos.y = 0;
+                var movement = new Vector3(Mathf.Lerp(rb.transform.position.x, rb.transform.position.x + (deltaPos.x / Screen.width) * moveSpeed, Time.deltaTime * moveSmoother), transform.position.y, transform.position.z);
+                rb.transform.position = movement;
+                startPos = Input.mousePosition;
+
+                if (isAnimated)
                 {
-                    isClear = true;
-                    anim.SetBool("Idle", true);
-                }
-                else
-                {
-                    isClear = false;
-                    anim.SetBool("Idle", false);
+                    anim.SetBool("Stop", true);
                 }
             }
+            else
+            {
+                isMoving = true;
+                if (isAnimated)
+                {
+                    anim.SetBool("Stop", false);
+                }
+            }
+            #endregion
+
+            #region Drop Mechanic
+            if (Input.GetMouseButtonUp(0) && !isThrowed && balance)
+            {
+                isThrowed = true;
+                if (!isClear)
+                {
+                    //Debug.Log("Bıraktın");
+                    //Instantiate(, new Vector3(character.transform.position.x - 0.5f, character.transform.position.y, character.transform.position.z), Quaternion.identity
+                    boxes[boxes.Count - 1].GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
+                    boxes[boxes.Count - 1].GetComponent<Rigidbody>().AddForce(impulsePower, 0, 0, ForceMode.Impulse);
+                    Invoke("FalseReturner", 1f);
+                    boxes[boxes.Count - 1].transform.parent = null;
+                    boxes.Remove(boxes[boxes.Count - 1]);
+
+                    if (boxes.Count == 0 || boxes == null)
+                    {
+                        isClear = true;
+                        anim.SetBool("Idle", true);
+                    }
+                    else
+                    {
+                        isClear = false;
+                        anim.SetBool("Idle", false);
+                    }
+                }
+            }
+            #endregion
         }
-        #endregion
     }
 
-    #region TriggerEnter&Exit
+    #region Triggers
     private void OnTriggerEnter(Collider other)
     {
-        if(other.gameObject.tag == "Balance")
+        if (other.gameObject.tag == "Balance")
         {
             balance = true;
         }
-        if(other.gameObject.tag == "Gem")
+        else if (other.gameObject.tag == "Gem")
         {
-            //Instantiate(gemImage, new Vector3 (other.gameObject.transform.position.x, other.gameObject.transform.position.y, -5), Quaternion.identity);
+            Instantiate(gemParticle, other.transform.position, Quaternion.identity);
             Destroy(other.gameObject.transform.parent.gameObject);
+            scoreCount++;
+            puan.text = " " + scoreCount;
+            Debug.Log(scoreCount);
+            //Debug.Log("Gem");
         }
-        if(other.gameObject.tag == "Win")
+        else if (other.gameObject.tag == "Win")
         {
             win = true;
         }
-        if (other.gameObject.tag == "Cam")
+        else if (other.gameObject.tag == "CamRotate")
         {
-            mainCam.gameObject.SetActive(false);
-            finalCam.gameObject.SetActive(true);
+            playerCamCM.gameObject.SetActive(false);
+            rotateCamCM.gameObject.SetActive(true);
         }
     }
     private void OnTriggerExit(Collider other)
