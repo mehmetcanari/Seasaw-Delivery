@@ -29,6 +29,8 @@ public class Movement : MonoBehaviour
     private bool isAnimated = false;
     private bool isStarted = false;
     private bool isEnded = false;
+    private bool move = false;
+    private bool tutorialBool = false;
 
     public Animator anim;
     public ParticleSystem gemParticle;
@@ -36,10 +38,12 @@ public class Movement : MonoBehaviour
     public CinemachineVirtualCamera rotateCamCM;
     public List<GameObject> boxes = new List<GameObject>();
     public Rigidbody rb;
+    public GameObject tutorial;
 
     public TextMeshProUGUI puan;
+    public TextMeshProUGUI tapToStart;
     #endregion
-    
+
 
     void Start()
     {
@@ -77,7 +81,7 @@ public class Movement : MonoBehaviour
         #endregion
 
         #region Movement
-        if (isMoving && !balance && !win && isStarted)
+        if (isMoving && !balance && !win && isStarted && !tutorialBool)
         {
             transform.Translate(0, 0, speed * Time.deltaTime);
         }
@@ -91,6 +95,11 @@ public class Movement : MonoBehaviour
             isAnimated = true;
             anim.SetBool("Stop", false);
         }
+        if (tutorialBool)
+        {
+            isAnimated = false;
+            anim.SetBool("Stop", true);
+        }
         #endregion
 
         #region Swerve
@@ -98,13 +107,19 @@ public class Movement : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))
             {
+                Destroy(tapToStart.gameObject);
                 isStarted = true;
                 startPos = Input.mousePosition;
-
+            }
+            if (isStarted && !move)
+            {
+                anim.SetBool("Stop", false);
             }
 
-            if (Input.GetMouseButton(0) && !win)
+            if (Input.GetMouseButton(0) && !win && move)
             {
+                tutorialBool = false;
+                Destroy(tutorial);
                 isMoving = false;
                 deltaPos = (Vector2)Input.mousePosition - startPos;
                 deltaPos.y = 0;
@@ -181,6 +196,13 @@ public class Movement : MonoBehaviour
         {
             playerCamCM.gameObject.SetActive(false);
             rotateCamCM.gameObject.SetActive(true);
+        }
+        if (other.gameObject.tag == "Move")
+        {
+            move = true;
+            tutorialBool = true;
+            tutorial.SetActive(true);
+            Destroy(other.gameObject);
         }
     }
     private void OnTriggerExit(Collider other)

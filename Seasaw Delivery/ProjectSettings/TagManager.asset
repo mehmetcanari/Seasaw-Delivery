@@ -13,6 +13,7 @@ TagManager:
   - Win
   - Cam
   - CamRotate
+  - Move
   layers:
   - Default
   - TransparentFX
