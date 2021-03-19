@@ -15,6 +15,7 @@ TagManager:
   - CamRotate
   - Move
   - Fall
+  - Surface
   layers:
   - Default
   - TransparentFX

@@ -17,6 +17,8 @@ public class Movement : MonoBehaviour
     public float moveSpeed;
     public float impulsePower;
     public float speed;
+    public float lerpTime;
+    public float smoothTime;
     private int scoreCount;
     public int rewardCounter;
 
@@ -32,7 +34,9 @@ public class Movement : MonoBehaviour
     private bool move = false;
     private bool tutorialBool = false;
     private bool isTutorialDestroyed = false;
+    private bool isPerfect = false;
     public bool instantiated = false;
+
 
     public Animator anim;
     public ParticleSystem gemParticle;
@@ -46,7 +50,13 @@ public class Movement : MonoBehaviour
     public TextMeshProUGUI puan;
     public TextMeshProUGUI tapToStart;
     public TextMeshProUGUI balanceTutorial;
+    public TextMeshProUGUI good;
+    public TextMeshProUGUI amazing;
     public TextMeshProUGUI perfect;
+    public GameObject Retry;
+    public GameObject NextLevel;
+    public GameObject kutusayi;
+    public TextMeshPro kutusayitext;
     #endregion
 
 
@@ -55,15 +65,32 @@ public class Movement : MonoBehaviour
         #region Calling Functions
         rb = GetComponent<Rigidbody>();
         anim = GetComponent<Animator>();
+        //playerCamCM = GetComponent<CinemachineVirtualCamera>();
         isAnimated = true;
         isStarted = false;
         isEnded = false;
+        kutusayitext = kutusayi.GetComponent<TextMeshPro>();
         #endregion
     }
 
 
     void Update()
     {
+        #region BoxesList
+        for (var i = boxes.Count - 1; i > -1; i--)
+        {
+            if(boxes[i] == null)
+            {
+                boxes.Remove(boxes[i]);
+            }
+        }
+        if (boxes.Count != 0)
+        {
+            kutusayi.transform.position = new Vector3(boxes[0].transform.position.x + 2, boxes[0].transform.position.y + 0.6f, boxes[0].transform.position.z + 0.2f);
+        }
+
+        #endregion
+
         #region Final Movement
         if (win && oneTime)
         {
@@ -155,52 +182,74 @@ public class Movement : MonoBehaviour
                 {
                     anim.SetBool("Stop", false);
                 }
-            }
-            #endregion
 
-            #region Drop Mechanic
-            if (Input.GetMouseButtonUp(0) && !isThrowed && balance)
-            {
-                isThrowed = true;
-                if (!isClear)
-                {
-                    //Debug.Log("Bıraktın");
-                    //Instantiate(, new Vector3(character.transform.position.x - 0.5f, character.transform.position.y, character.transform.position.z), Quaternion.identity
-                    boxes[boxes.Count - 1].GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
-                    boxes[boxes.Count - 1].GetComponent<Rigidbody>().AddForce(impulsePower, 0, 0, ForceMode.Impulse);
-                    Invoke("FalseReturner", 1f);
-                    boxes[boxes.Count - 1].transform.parent = null;
-                    boxes.Remove(boxes[boxes.Count - 1]);
-
-                    //if (boxes.Count == 0 || boxes == null)
-                    //{
-                    //    isClear = true;
-                    //    anim.SetBool("Idle", true);
-                    //}
-                    //else
-                    //{
-                    //    isClear = false;
-                    //    anim.SetBool("Idle", false);
-                    //}
-                }
             }
-            #endregion
         }
+        #endregion
 
+        #region Drop Mechanic
+        if (Input.GetMouseButtonUp(0) && !isThrowed && balance)
+        {
+            isThrowed = true;
+            if (!isClear)
+            {
+                //Debug.Log("Bıraktın");
+                //Instantiate(, new Vector3(character.transform.position.x - 0.5f, character.transform.position.y, character.transform.position.z), Quaternion.identity
+                boxes[boxes.Count - 1].GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
+                boxes[boxes.Count - 1].GetComponent<Rigidbody>().AddForce(impulsePower, 0, 0, ForceMode.Impulse);
+                Invoke("FalseReturner", 1f);
+                boxes[boxes.Count - 1].transform.parent = null;
+                boxes.Remove(boxes[boxes.Count - 1]);
+
+                //if (boxes.Count == 0 || boxes == null)
+                //{
+                //    isClear = true;
+                //    anim.SetBool("Idle", true);
+                //}
+                //else
+                //{
+                //    isClear = false;
+                //    anim.SetBool("Idle", false);
+                //}
+            }
+        }
+        #endregion
+
+        #region Reward
         if (rewardCounter == 4)
         {
-            perfect.gameObject.SetActive(true);
+            if (!isPerfect)
+            {
+                good.gameObject.SetActive(true);
+                good.gameObject.transform.DOScale(new Vector3(1, 1, 1), 0.25f);
+            }
         }
 
-        if (rewardCounter == 9)
+        else if (rewardCounter == 8)
         {
-            perfect.gameObject.SetActive(true);
+            if (!isPerfect)
+            {
+                amazing.gameObject.SetActive(true);
+                amazing.gameObject.transform.DOScale(new Vector3(1, 1, 1), 0.25f);
+            }
         }
 
-        if (rewardCounter == 14)
+        else if (rewardCounter == 14)
         {
-            perfect.gameObject.SetActive(true);
+            if (!isPerfect)
+            {
+                perfect.gameObject.SetActive(true);
+                perfect.gameObject.transform.DOScale(new Vector3(1, 1, 1), 0.25f);
+            }
         }
+
+        else
+        {
+            good.gameObject.transform.DOScale(new Vector3(0, 0, 0), 0.25f);
+            amazing.gameObject.transform.DOScale(new Vector3(0, 0, 0), 0.25f);
+            perfect.gameObject.transform.DOScale(new Vector3(0, 0, 0), 0.25f);
+        }
+        #endregion
     }
 
     #region Triggers
@@ -212,31 +261,46 @@ public class Movement : MonoBehaviour
             balanceTutorial.gameObject.SetActive(true);
             balanceTutorial.gameObject.transform.DOScale(Vector2.one, 0.5f);
         }
+
         else if (other.gameObject.tag == "Gem")
         {
             Instantiate(gemParticle, other.transform.position, Quaternion.identity);
             Destroy(other.gameObject.transform.parent.gameObject);
             scoreCount++;
-            puan.text = " " + scoreCount;
+            if (!win)
+            {
+                puan.text = " " + scoreCount;
+            }
             scoreImage.transform.DOScale(new Vector2(5, 5), 0.1f);
             scoreImage.transform.DOScale(new Vector2(2.5f, 2.5f), 0.2f);
             Debug.Log(scoreCount);
             //Debug.Log("Gem");
         }
-        else if (other.gameObject.tag == "Win")
+
+        if (other.gameObject.tag == "Win")
         {
+            if (win)
+            {
+                scoreCount = boxes.Count * scoreCount;
+                puan.text = "" + scoreCount;
+            }
             win = true;
+            NextLevel.SetActive(true);
+            NextLevel.gameObject.transform.DOScale(new Vector2(1, 1), 0.3f);
+            kutusayitext.SetText("" + boxes.Count + "x");
 
             if (win)
             {
                 isAnimated = false;
             }
         }
+
         else if (other.gameObject.tag == "CamRotate")
         {
             playerCamCM.gameObject.SetActive(false);
             rotateCamCM.gameObject.SetActive(true);
         }
+
         if (other.gameObject.tag == "Move")
         {
             move = true;
@@ -245,13 +309,20 @@ public class Movement : MonoBehaviour
             tutorial.gameObject.transform.DOScale(new Vector2(0.5f, 0.5f), 0.5f);
             Destroy(other.gameObject);
         }
+
         if (other.gameObject.tag == "Destroy")
         {
             playerCamCM.Follow = null;
+            Retry.SetActive(true);
         }
-        if (other.gameObject.tag == "Fall")
+
+        if (other.gameObject.tag == "Surface")
         {
+            //lerpTime = Mathf.Clamp(lerpTime + Time.deltaTime * smoothTime, 0f, 1f);
+            isPerfect = false;
             rewardCounter += 1;
+            //playerCamCM.GetCinemachineComponent<CinemachineTransposer>().m_FollowOffset = Vector3.Lerp(playerCamCM.GetCinemachineComponent<CinemachineTransposer>().m_FollowOffset, new Vector3(playerCamCM.GetCinemachineComponent<CinemachineTransposer>().m_FollowOffset.x, playerCamCM.GetCinemachineComponent<CinemachineTransposer>().m_FollowOffset.y, playerCamCM.GetCinemachineComponent<CinemachineTransposer>().m_FollowOffset.z - 100f), lerpTime * Time.deltaTime);
+            //Invoke("DelayOffset", 1f);
         }
     }
     private void OnTriggerExit(Collider other)
@@ -261,6 +332,13 @@ public class Movement : MonoBehaviour
             balance = false;
             balanceTutorial.gameObject.transform.DOScale(Vector2.zero, 0.5f);
             //Destroy(balanceTutorial.gameObject, 1f);
+        }
+
+        if (other.gameObject.tag == "Surface")
+        {
+            isPerfect = true;
+            perfect.gameObject.transform.DOScale(new Vector2(0, 0), 0.5f);
+            //rewardCounter = 0;
         }
     }
     #endregion
@@ -285,9 +363,15 @@ public class Movement : MonoBehaviour
                 instantiated = true;
             }
         }
+
         isStarted = false;
         isAnimated = false;
         anim.SetBool("Dance", true);
     }
+
+    //public void DelayOffset()
+    //{
+    //    playerCamCM.GetCinemachineComponent<CinemachineTransposer>().m_FollowOffset = Vector3.Lerp(playerCamCM.GetCinemachineComponent<CinemachineTransposer>().m_FollowOffset, new Vector3(playerCamCM.GetCinemachineComponent<CinemachineTransposer>().m_FollowOffset.x, playerCamCM.GetCinemachineComponent<CinemachineTransposer>().m_FollowOffset.y, playerCamCM.GetCinemachineComponent<CinemachineTransposer>().m_FollowOffset.z + 100f), lerpTime * Time.deltaTime);
+    //}
     #endregion
 }
