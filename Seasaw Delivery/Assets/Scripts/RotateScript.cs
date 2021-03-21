@@ -6,6 +6,6 @@ public class RotateScript : MonoBehaviour
 {
     void Update()
     {
-        transform.Rotate(0, 2, 0 * Time.deltaTime);
+        transform.Rotate(0, 1f, 0 * Time.deltaTime);
     }
 }

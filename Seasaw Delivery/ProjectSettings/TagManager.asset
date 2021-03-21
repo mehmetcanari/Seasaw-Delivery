@@ -16,6 +16,8 @@ TagManager:
   - Move
   - Fall
   - Surface
+  - Obstacle
+  - SurfaceAnvil
   layers:
   - Default
   - TransparentFX
